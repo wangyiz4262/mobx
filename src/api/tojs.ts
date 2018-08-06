@@ -23,7 +23,9 @@ function cache<K, V>(map: Map<any, any>, key: K, value: V, options: ToJSOptions)
 }
 
 function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) {
-    if (!isObservable(source)) return source
+    if (typeof source !== "object") {
+        return source
+    }
 
     const detectCycles = options.detectCycles === true
 
@@ -36,7 +38,7 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
         return __alreadySeen.get(source)
     }
 
-    if (isObservableArray(source)) {
+    if (isObservableArray(source) || Object.getPrototypeOf(source) === Array.prototype) {
         const res = cache(__alreadySeen, source, [] as any, options)
         const toAdd = source.map(value => toJSHelper(value, options!, __alreadySeen))
         res.length = toAdd.length
@@ -44,7 +46,7 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
         return res
     }
 
-    if (isObservableObject(source)) {
+    if (isObservableObject(source) || Object.getPrototypeOf(source) === Object.prototype) {
         const res = cache(__alreadySeen, source, {}, options)
         keys(source) // make sure we track the keys of the object
         for (let key in source) {
@@ -53,7 +55,7 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
         return res
     }
 
-    if (isObservableMap(source)) {
+    if (isObservableMap(source) || Object.getPrototypeOf(source) === Map.prototype) {
         if (options.exportMapsAsObjects === false) {
             const res = cache(__alreadySeen, source, new Map(), options)
             source.forEach((value, key) => {
@@ -81,8 +83,6 @@ export function toJS<T>(source: T, options?: ToJSOptions): T
 export function toJS(source: any, options?: ToJSOptions): any
 export function toJS(source, options: ToJSOptions) // internal overload
 export function toJS(source, options?: ToJSOptions) {
-    if (!isObservable(source)) return source
-
     // backward compatibility
     if (typeof options === "boolean") options = { detectCycles: options }
     if (!options) options = defaultOptions
