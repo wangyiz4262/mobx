@@ -29,12 +29,7 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
 
     const detectCycles = options.detectCycles === true
 
-    if (
-        detectCycles &&
-        source !== null &&
-        typeof source === "object" &&
-        __alreadySeen.has(source)
-    ) {
+    if (detectCycles && source !== null && __alreadySeen.has(source)) {
         return __alreadySeen.get(source)
     }
 
@@ -43,15 +38,6 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
         const toAdd = source.map(value => toJSHelper(value, options!, __alreadySeen))
         res.length = toAdd.length
         for (let i = 0, l = toAdd.length; i < l; i++) res[i] = toAdd[i]
-        return res
-    }
-
-    if (isObservableObject(source) || Object.getPrototypeOf(source) === Object.prototype) {
-        const res = cache(__alreadySeen, source, {}, options)
-        keys(source) // make sure we track the keys of the object
-        for (let key in source) {
-            res[key] = toJSHelper(source[key], options!, __alreadySeen)
-        }
         return res
     }
 
@@ -72,6 +58,13 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
     }
 
     if (isObservableValue(source)) return toJSHelper(source.get(), options!, __alreadySeen)
+
+    // Fallback to if source is an ObservableObject or a plain object
+    const res = cache(__alreadySeen, source, {}, options)
+    for (let key in source) {
+        res[key] = toJSHelper(source[key], options!, __alreadySeen)
+    }
+    return res
 
     return source
 }
