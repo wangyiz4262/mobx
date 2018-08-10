@@ -59,7 +59,7 @@ function toJSHelper(source, options: ToJSOptions, __alreadySeen: Map<any, any>) 
 
     if (isObservableValue(source)) return toJSHelper(source.get(), options!, __alreadySeen)
 
-    // Fallback to if source is an ObservableObject or a plain object
+    // Fallback to situation if source is an ObservableObject or a plain object
     const res = cache(__alreadySeen, source, {}, options)
     for (let key in source) {
         res[key] = toJSHelper(source[key], options!, __alreadySeen)
