@@ -155,7 +155,7 @@ test("json2", function() {
             url: "booking.com"
         }
     })
-    expect(JSON.parse(JSON.stringify(o))).toEqual({
+    expect(mobx.toJS(o)).toEqual({
         todos: [
             {
                 title: "write blog",
